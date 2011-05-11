@@ -1,11 +1,10 @@
 <?php
 include_once(dirname(__FILE__) . "/salsa-core.php");
-include_once(dirname(__FILE__) . "/salsa-supporter.php");
 
 /**
  * Encapsulates an action in the Salsa framework.
  */
-class SalsaAction extends SalsaObject {
+class SAPSalsaAction extends SAPSalsaObject {
     public $action_KEY;
     public $organization_KEY;
     public $chapter_KEY;
@@ -37,12 +36,12 @@ class SalsaAction extends SalsaObject {
      * Gets an action by its unique key.
      * 
      * @param integer $action_KEY The unique key of the action.
-     * @return SalsaAction The action with the given key.
+     * @return SAPSalsaAction The action with the given key.
      */
     public static function get($action_KEY) {
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
-            return $conn->getObject('action', $action_KEY, 'SalsaAction');
+            return $conn->getObject('action', $action_KEY, 'SAPSalsaAction');
         }
         return NULL;
     }
@@ -50,12 +49,12 @@ class SalsaAction extends SalsaObject {
     /**
      * Gets a list of all the available actions.
      * 
-     * @return array<SalsaAction> A list of all the actions.
+     * @return array<SAPSalsaAction> A list of all the actions.
      */
     public static function getAll() {
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
-            return $conn->getObjects('action', NULL, NULL, 'SalsaAction');
+            return $conn->getObjects('action', NULL, NULL, 'SAPSalsaAction');
         }
         return array();
     }
@@ -66,21 +65,21 @@ class SalsaAction extends SalsaObject {
      * 
      * @param object The supporter fields submitted by the user
      * 
-     * @return array<SalsaTarget> A list of target or recipient objects.
+     * @return array<SAPSalsaTarget> A list of target or recipient objects.
      */
     public function getTargets($supporter) {
         if (!empty($this->targets)) {
             return $this->targets;
         }
         $this->targets = array();
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if (!$conn) {
             return $this->targets;
         }
         
         // Convert to a supporter object
         if (is_array($supporer)) {
-            $supporter = new SalsaSupporter($supporter);
+            $supporter = new SAPSalsaSupporter($supporter);
         }
         
         // Get all the targets (the Actions3 way)
@@ -89,10 +88,10 @@ class SalsaAction extends SalsaObject {
         
         $res = $conn->postJson("/o/$this->organization_KEY/p/dia/action3/common/public/targetJSON.sjs", $params);
         
-        // Cast the targets to SalsaTargets.
+        // Cast the targets to SAPSalsaTargets.
         if (!empty($res)) {
             foreach ($res as $t) {
-                $target = new SalsaTarget($t);
+                $target = new SAPSalsaTarget($t);
                 $this->targets[$target->key] = $target;
             }
         }
@@ -109,7 +108,7 @@ class SalsaAction extends SalsaObject {
      * @return boolean True if targets have been configured, false otherwise.
      */
     public function hasTargets() {
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if (!$conn) {
             return false;
         }
@@ -120,14 +119,14 @@ class SalsaAction extends SalsaObject {
     /**
      * Returns all the available content for this action.
      * 
-     * @return array<SalsaContent> The available content.
+     * @return array<SAPSalsaContent> The available content.
      */
     public function getContents() {
         if (!empty($this->contents)) {
             return $this->contents;
         }
         $this->contents = array();
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if (!$conn) {
             return $this->contents;
         }
@@ -139,7 +138,7 @@ class SalsaAction extends SalsaObject {
                 $action_content_KEY = (string)$item->action_content_KEY;
                 
                 // Get the message for this content set
-                $content = SalsaContent::get($action_content_KEY);
+                $content = SAPSalsaContent::get($action_content_KEY);
                 if (!empty($content)) {
                     $this->contents[$action_content_KEY] = $content;
                 }
@@ -156,7 +155,7 @@ class SalsaAction extends SalsaObject {
     public function getSupporterFields() {
         if (empty($this->fields)) {
             $this->fields = array();
-            $this->fields['description'] = new SalsaSupporterFieldLabel('description', 'Description', $this->Description);
+            $this->fields['description'] = new SAPSalsaSupporterFieldLabel('description', 'Description', $this->Description);
 
             // Get the supporter fields
             $request = split(',', $this->Request);
@@ -164,31 +163,31 @@ class SalsaAction extends SalsaObject {
             $required = array_flip($required);
             
             foreach ($request as $id) {
-                $this->fields[$id] = SalsaSupporterField::get($id, isset($required[$id]));
+                $this->fields[$id] = SAPSalsaSupporterField::get($id, isset($required[$id]));
             }
-            $this->fields['footer'] = new SalsaSupporterFieldLabel('footer', 'Footer', $this->Footer);
+            $this->fields['footer'] = new SAPSalsaSupporterFieldLabel('footer', 'Footer', $this->Footer);
             
             // Get the groups
             $groups = $this->getGroups();
             if (!empty($groups)) {
-                $this->fields['groups'] = new SalsaSupporterFieldGroupBoxes($groups);
+                $this->fields['groups'] = new SAPSalsaSupporterFieldGroupBoxes($groups);
             }
             
             // Get the content
             $contents = $this->getContents();
             foreach ($contents as $content_KEY => $content) {
                 $id = "content_{$content_KEY}";
-                $this->fields[$id] = new SalsaSupporterFieldLabel($id, 'Content', $content->Recommended_Content);
+                $this->fields[$id] = new SAPSalsaSupporterFieldLabel($id, 'Content', $content->Recommended_Content);
                 $this->fields[$id]->classes .= ' nsjalapeno--content';
             }
             
             // If anonymous comments are allowed, show the checkbox
             if ($this->Allow_Anonymous == 'true') {
-            	$this->fields['Anonymous'] = new SalsaSupporterFieldCheckBox('Anonymous', 'Display in list as anonymous');
+            	$this->fields['Anonymous'] = new SAPSalsaSupporterFieldCheckBox('Anonymous', 'Display in list as anonymous');
             }
             // If comments are allowed, show the comment box
             if ($this->Allow_Comments == 'true') {
-            	$this->fields['Comment'] = new SalsaSupporterFieldTextArea('Comment', false, $this->Comment_Question);
+            	$this->fields['Comment'] = new SAPSalsaSupporterFieldTextArea('Comment', false, $this->Comment_Question);
             }
         }
         return $this->fields;
@@ -196,7 +195,7 @@ class SalsaAction extends SalsaObject {
     
     public function getGroups() {
         // Get the names of all the groups
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if (!$conn) {
             return array();
         }
@@ -222,7 +221,7 @@ class SalsaAction extends SalsaObject {
     }
     
     /**
-     * @param SalsaSupporter $supporter
+     * @param SAPSalsaSupporter $supporter
      */
     public function isRestricted($supporter) {
     	$location = $supporter->getLocation();
@@ -269,7 +268,7 @@ class SalsaAction extends SalsaObject {
      */
     public function submit($supporter) {
         // Get the connect and make sure it succeeded.
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if (!$conn) {
             return 'ERROR: The server was not initialized.';
         }
@@ -279,7 +278,7 @@ class SalsaAction extends SalsaObject {
             
         // Load the targets and contents for the given supporter
         if (is_array($supporter)) {
-            $supporter = new SalsaSupporter($supporter);
+            $supporter = new SAPSalsaSupporter($supporter);
         }
         // If the action is restricted, the user is unable to complete this action.
         $restricted = $this->isRestricted($supporter);
@@ -397,7 +396,7 @@ EOT
         }
         
         // Get the connect and make sure it succeeded.
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if (!$conn || !empty($conn->errors)) {
             return $out;
         }
@@ -417,7 +416,7 @@ EOT
         		
 	        	// Lookup the supporter
 	        	$supporter_KEY = (string)$item->supporter_KEY;
-	        	$out[] = SalsaSupporter::get($supporter_KEY);
+	        	$out[] = SAPSalsaSupporter::get($supporter_KEY);
 	        	$count++;
         	}
         	if ($count >= $max) {
@@ -428,7 +427,7 @@ EOT
     }
 }
 
-class SalsaTarget extends SalsaObject {
+class SAPSalsaTarget extends SAPSalsaObject {
     public $action_content_KEY;
     public $method;
     protected $display_name;
@@ -445,14 +444,14 @@ class SalsaTarget extends SalsaObject {
      *   message variants is randomly selected, this will ensure it is the
      *   same variant that appears elsewhere. 
      *   
-     * @return SalsaContent The content associated with this target.
+     * @return SAPSalsaContent The content associated with this target.
      */
     public function getContent($action = NULL) {
         if (!empty($action)) {
             $contents = $action->getContents();
             return $contents[$this->action_content_KEY];
         }
-        return SalsaContent::get($this->action_content_KEY);
+        return SAPSalsaContent::get($this->action_content_KEY);
     }
     
     /**
@@ -484,7 +483,7 @@ class SalsaTarget extends SalsaObject {
 }
 
 
-class SalsaContent extends SalsaObject {
+class SAPSalsaContent extends SAPSalsaObject {
     public $action_KEY;
     public $action_content_KEY;
     public $action_content_detail_KEY;
@@ -499,7 +498,7 @@ class SalsaContent extends SalsaObject {
         parent::__construct($xml);
         
         // Lookup the corresponding action_content object
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
             $xml = $conn->getObject('action_content', $this->action_content_KEY);
             if (!empty($xml)) {
@@ -516,13 +515,13 @@ class SalsaContent extends SalsaObject {
      * messages, one will be selected randomly. 
      * 
      * @param integer $action_content_KEY The identifier of the content set.
-     * @return SalsaContent A single content object.
+     * @return SAPSalsaContent A single content object.
      */
     public static function get($action_content_KEY) {
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
             // Get the alternate messages for this target
-            $contents = $conn->getObjects('action_content_detail', "action_content_KEY=$action_content_KEY", NULL, 'SalsaContent');
+            $contents = $conn->getObjects('action_content_detail', "action_content_KEY=$action_content_KEY", NULL, 'SAPSalsaContent');
             
             // If there are alternate messages, choose one randomly.
             $key = 0;
@@ -538,16 +537,16 @@ class SalsaContent extends SalsaObject {
     }
 }
 
-class SalsaSupporter extends SalsaObject {
+class SAPSalsaSupporter extends SAPSalsaObject {
     
     public function __construct($obj) {
         parent::__construct($obj);
     }
     
     public static function get($supporter_KEY) {
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
-            return $conn->getObject('supporter', $supporter_KEY, 'SalsaSupporter');
+            return $conn->getObject('supporter', $supporter_KEY, 'SAPSalsaSupporter');
         }
         return NULL;
     }
@@ -607,7 +606,7 @@ class SalsaSupporter extends SalsaObject {
         }
         
         // Lookup the supporter's location
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
             $q = $conn->postJson('http://warehouse.democracyinaction.org/salsa/api/warehouse/append.jsp', 
               array_merge(array('json' => 'true'), $p));

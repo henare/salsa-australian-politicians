@@ -5,7 +5,7 @@
  * @author Andrew Marcus
  * @since May 26, 2010
  */
-class SalsaConnector {
+class SAPSalsaConnector {
     
     protected static $instance = FALSE;
     
@@ -13,7 +13,7 @@ class SalsaConnector {
      * Gets the singleton instance of the Salsa connector.  You must call
      * initialize() before you can call this function.
      * 
-     * @return SalsaConnector The singleton instance, or false if it has not
+     * @return SAPSalsaConnector The singleton instance, or false if it has not
      *   yet been initialized.
      */
     public static function instance() {
@@ -31,10 +31,10 @@ class SalsaConnector {
      * @param string $host The URL of the Salsa server.
      * @param string $user The username.
      * @param string $pass The password.
-     * @return SalsaConnector The newly-created SalsaConnector singleton.
+     * @return SAPSalsaConnector The newly-created SAPSalsaConnector singleton.
      */
     public static function initialize($host, $user, $pass) {
-        self::$instance = new SalsaConnector($host, $user, $pass);
+        self::$instance = new SAPSalsaConnector($host, $user, $pass);
         return self::$instance;
     }
     
@@ -289,10 +289,10 @@ class SalsaConnector {
      *   - offset: The starting offset of the results
      *   - includes: An array of fields to include in the results
      *   
-     * @param string $className The name of the SalsaObject subclass to output.
+     * @param string $className The name of the SAPSalsaObject subclass to output.
      *   If this is null, the root SimpleXMLElement will be returned instead.
      *   
-     * @return array<SalsaObject> The response objects, or null if there was 
+     * @return array<SAPSalsaObject> The response objects, or null if there was 
      *   an error.
      */
     public function getObjects($table, $conditions = array(), $params = array(), $className = NULL) {
@@ -328,10 +328,10 @@ class SalsaConnector {
      * @param string $table The name of the table (action, action_content, etc.) 
      * @param integer $key The unique key of the object within the table.
      * 
-     * @param string $className The name of the SalsaObject subclass to output.
+     * @param string $className The name of the SAPSalsaObject subclass to output.
      *   If this is null, the root SimpleXMLElement will be returned instead.
      *   
-     * @return SalsaObject|SimpleXMLElement The response object, or null if 
+     * @return SAPSalsaObject|SimpleXMLElement The response object, or null if 
      *   there was an error.
      */
     public function getObject($table, $key, $className = NULL) {
@@ -350,7 +350,7 @@ class SalsaConnector {
      * Saves an object to the Salsa database.
      * 
      * @param string $table The name of the table (action, action_content, etc.) 
-     * @param SalsaObject|array $object The object to save.  If it has a key parameter, an
+     * @param SAPSalsaObject|array $object The object to save.  If it has a key parameter, an
      *   existing record will be updated.
      */
     public function saveObject($table, $object) {
@@ -421,7 +421,7 @@ class SalsaConnector {
 /**
  * An abstract parent class for all Salsa Objects to extend.
  */
-abstract class SalsaObject {
+abstract class SAPSalsaObject {
     public $object;
     public $key = 0;
     
@@ -444,7 +444,7 @@ abstract class SalsaObject {
      * Saves this object to Salsa.
      */
     public function save() {
-        $conn = SalsaConnector::instance();
+        $conn = SAPSalsaConnector::instance();
         if ($conn) {
             $conn->saveObject($this->object, $this);
         }
