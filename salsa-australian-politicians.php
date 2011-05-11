@@ -25,6 +25,8 @@ License: GPL v3
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+include_once "salsa/salsa-action.php";
+
 add_action('admin_menu', 'salsa_campaigns_menu');
 add_shortcode('salsa-campaign', 'salsa_campaigns_shortcode');
 
@@ -111,7 +113,33 @@ function salsa_campaigns_options() {
  * Acts as a controller for the shortcode by checking POSTed
  * parameters and sending to the appropriate view
 */
-function salsa_campaigns_shortcode() {
+function salsa_campaigns_shortcode($atts) {
+  # Get and check the shortcode attributes
+  extract(shortcode_atts(
+    array(
+      'name' => ''
+    ),
+    $atts
+  ));
+  if (!$name) {
+    return salsa_campaigns_error_page();
+  }
+
+  # Check to see if we can find a campaign
+  $salsa = salsa_campaigns_salsa_logon();
+  $result = $salsa->getObjects(
+    'action',
+    array(
+      "Title=" . $atts['name']
+    ),
+    array('limit' => '1')
+  );
+  if ($result->action->item->action_KEY) {
+    $action_key = $result->action->item->action_KEY;
+  }else{
+    salsa_campaigns_error_page();
+  }
+
   // Route pages based on data POSTed
   if (isset($_POST['salsa_campaigns_method'])) {
     # Check the requested method here and route to the correct function
@@ -121,12 +149,18 @@ function salsa_campaigns_shortcode() {
 }
 
 /**
+ * Shows an error when we detect something wrong with the shortcode,
+ * like the campaign name not entered
+*/
+function salsa_campaigns_error_page() {
+  return "We're sorry but this campaign seems to be incorrectly configured, please contact the site owner to report this problem.";
+}
+
+/**
  * Default page rendered for the shortcode, just asks a user
  * for their postcode
 */
-function salsa_campaigns_postcode_page($atts) {
-  # Check to see if we can find a campaign
-  
+function salsa_campaigns_postcode_page() {
   return '
     <form name="form1" method="post" action="">
       <input type="hidden" name="method" value="step2">
