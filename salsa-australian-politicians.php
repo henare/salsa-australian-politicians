@@ -130,14 +130,14 @@ function salsa_campaigns_shortcode($atts) {
   $result = $salsa->getObjects(
     'action',
     array(
-      "Title=" . $atts['name']
+      "Title=" . $name
     ),
     array('limit' => '1')
   );
   if ($result->action->item->action_KEY) {
     $action_key = $result->action->item->action_KEY;
   }else{
-    salsa_campaigns_error_page();
+    return salsa_campaigns_error_page();
   }
 
   // Route pages based on data POSTed
