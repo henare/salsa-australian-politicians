@@ -144,11 +144,11 @@ function salsa_campaigns_shortcode($atts) {
   if (isset($_POST['salsa_campaigns_method'])) {
     # Check the requested method here and route to the correct function
     switch ($_POST['salsa_campaigns_method']) {
-      case 'selectMP':
+      case 'select_mp':
         return salsa_campaigns_select_mp_page($_POST['salsa_campaigns_postcode']);
         break;
-      case 'someother':
-        #do stuff
+      case 'write_message':
+        return salsa_campaigns_write_message_page($_POST['salsa_campaigns_mp']);
         break;
     }
   } else {
@@ -171,7 +171,7 @@ function salsa_campaigns_error_page() {
 function salsa_campaigns_postcode_page() {
   return '
     <form name="form1" method="post" action="">
-      <input type="hidden" name="salsa_campaigns_method" value="selectMP">
+      <input type="hidden" name="salsa_campaigns_method" value="select_mp">
       <p>
         Enter your postcode to find your representative:
       </p>
@@ -186,8 +186,8 @@ function salsa_campaigns_postcode_page() {
 }
 
 /**
- * This page is rendered when the user has entered a postcode and we
- * want to display the message and detail entry form
+ * This page is rendered when the user has entered a postcode and they
+ * need to select an MP to write to
 */
 function salsa_campaigns_select_mp_page($postcode) {
   // Validate postcode
@@ -228,7 +228,7 @@ function salsa_campaigns_select_mp_page($postcode) {
   // Render page
   $page = '
     <script type="text/javascript">
-      # Allows links to POST data
+      // Allows links to POST data
       function post(mp_name) {
         var form = document.createElement("form");
         form.setAttribute("method", "post");
@@ -239,7 +239,13 @@ function salsa_campaigns_select_mp_page($postcode) {
         hiddenField.setAttribute("name", "salsa_campaigns_mp");
         hiddenField.setAttribute("value", mp_name);
 
+        var methodField = document.createElement("input");
+        methodField.setAttribute("type", "hidden");
+        methodField.setAttribute("name", "salsa_campaigns_method");
+        methodField.setAttribute("value", "write_message");
+
         form.appendChild(hiddenField);
+        form.appendChild(methodField);
         document.body.appendChild(form);
 
         form.submit();
@@ -249,11 +255,19 @@ function salsa_campaigns_select_mp_page($postcode) {
     <ul>
   ';
   foreach ( $MPs as $MP ) {
-    $page .= '<li><a href="#" onclick="post(' . $MP['name'] . ');">' . $MP['name'] . '</a> - ' . $MP['type'] . ' for ' . $MP['electorate'] . '</li>';
+    $page .= '<li><a href="#" onclick="post(\'' . $MP['name'] . '\');">' . $MP['name'] . '</a> - ' . $MP['type'] . ' for ' . $MP['electorate'] . '</li>';
   }
   $page .= '</ul>';
 
   return $page;
+}
+
+/**
+ * This page is rendered when the user has entered a postcode and we
+ * want to display the message and detail entry form
+*/
+function salsa_campaigns_write_message_page($mp_name) {
+  var_dump($mp_name);
 }
 
 // Authenticate and instantiate the Salsa connector
