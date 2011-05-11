@@ -148,7 +148,11 @@ function salsa_campaigns_shortcode($atts) {
         return salsa_campaigns_select_mp_page($_POST['salsa_campaigns_postcode']);
         break;
       case 'write_message':
-        return salsa_campaigns_write_message_page($_POST['salsa_campaigns_mp']);
+        return salsa_campaigns_write_message_page(
+          $name,
+          $_POST['salsa_campaigns_mp_first_name'],
+          $_POST['salsa_campaigns_mp_last_name']
+        );
         break;
     }
   } else {
@@ -208,7 +212,8 @@ function salsa_campaigns_select_mp_page($postcode) {
   foreach ( $representatives->match as $representative ) {
     $MPs[] = array(
         'type'       => 'The member',
-        'name'       => $representative->full_name,
+        'first_name' => $representative->first_name,
+        'last_name'  => $representative->last_name,
         'electorate' => $representative->constituency
     );
   }
@@ -220,7 +225,8 @@ function salsa_campaigns_select_mp_page($postcode) {
   foreach ( $senators->match as $senator ) {
     $MPs[] = array(
         'type'       => 'Senator',
-        'name'       => $senator->name,
+        'first_name' => $senator->first_name,
+        'last_name'  => $senator->last_name,
         'electorate' => $senator->constituency
     );
   }
@@ -229,22 +235,28 @@ function salsa_campaigns_select_mp_page($postcode) {
   $page = '
     <script type="text/javascript">
       // Allows links to POST data
-      function post(mp_name) {
+      function post(mp_first_name, mp_last_name) {
         var form = document.createElement("form");
         form.setAttribute("method", "post");
         form.setAttribute("action", location.href);
 
-        var hiddenField = document.createElement("input");
-        hiddenField.setAttribute("type", "hidden");
-        hiddenField.setAttribute("name", "salsa_campaigns_mp");
-        hiddenField.setAttribute("value", mp_name);
+        var mpFirstName = document.createElement("input");
+        mpFirstName.setAttribute("type", "hidden");
+        mpFirstName.setAttribute("name", "salsa_campaigns_mp_first_name");
+        mpFirstName.setAttribute("value", mp_first_name);
+
+        var mpLastName = document.createElement("input");
+        mpLastName.setAttribute("type", "hidden");
+        mpLastName.setAttribute("name", "salsa_campaigns_mp_last_name");
+        mpLastName.setAttribute("value", mp_last_name);
 
         var methodField = document.createElement("input");
         methodField.setAttribute("type", "hidden");
         methodField.setAttribute("name", "salsa_campaigns_method");
         methodField.setAttribute("value", "write_message");
 
-        form.appendChild(hiddenField);
+        form.appendChild(mpFirstName);
+        form.appendChild(mpLastName);
         form.appendChild(methodField);
         document.body.appendChild(form);
 
@@ -255,7 +267,19 @@ function salsa_campaigns_select_mp_page($postcode) {
     <ul>
   ';
   foreach ( $MPs as $MP ) {
-    $page .= '<li><a href="#" onclick="post(\'' . $MP['name'] . '\');">' . $MP['name'] . '</a> - ' . $MP['type'] . ' for ' . $MP['electorate'] . '</li>';
+    $page .= '<li><a href="#" onclick="post(\''
+           . $MP['first_name']
+           . '\',\''
+           . $MP['last_name']
+           . '\');">'
+           . $MP['first_name']
+           . ' '
+           . $MP['last_name']
+           . '</a> - '
+           . $MP['type']
+           . ' for '
+           . $MP['electorate']
+           . '</li>';
   }
   $page .= '</ul>';
 
@@ -263,11 +287,76 @@ function salsa_campaigns_select_mp_page($postcode) {
 }
 
 /**
- * This page is rendered when the user has entered a postcode and we
- * want to display the message and detail entry form
+ * This page is rendered when the user has selected an MP and needs to
+ * write their message and enter their details
 */
-function salsa_campaigns_write_message_page($mp_name) {
-  var_dump($mp_name);
+function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_last_name) {
+  # Check the MP is in Salsa as a target
+  $salsa = salsa_campaigns_salsa_logon();
+  $recipient = $salsa->getObjects(
+    'recipient',
+    array(
+      "given_name=" . $mp_first_name,
+      "family_name=" . $mp_last_name
+    ),
+    array('limit' => '1')
+  );
+  if ($recipient->recipient->item->recipient_KEY) {
+    $recipient = $recipient->recipient->item;
+  }else{
+    return "Sorry, there seems to be a problem with that MP's contact details. Please contact the site owner or try selecting a different MP." . salsa_campaigns_postcode_page();
+  }
+
+  # Get the default message, etc.
+  $current_action = $salsa->getObjects(
+    'action',
+    array(
+      "Title=" . $campaign_name
+    ),
+    array('limit' => '1')
+  );
+
+/*
+  $page = '
+    Enter your message and details to send to ' . $mp_first_name . ' ' . $mp_last_name . ':</p>
+    <form name="form1" method="post" action="">
+      <input type="hidden" name="salsa_campaigns_method" value="send_message" />
+
+      <p>Subject</p>
+      <input type="text" name="aycc_mymc_subject" value="" />
+
+      Message<br />
+      <textarea rows="5" cols="50" name="aycc_mymc_message">Please stop climate change.</textarea>
+
+      First name<br />
+      <input type="text" name="aycc_mymc_firstname" value="" /><br />
+      Last name<br />
+      <input type="text" name="aycc_mymc_lastname" value="" /><br />
+      Email address<br />
+      <input type="text" name="aycc_mymc_email" value="" /><br />
+      Post code<br />
+      <input type="text" name="aycc_mymc_sender_postcode" value="" /><br />
+      State<br />
+      <select name="aycc_mymc_state">
+       <option value="0">Queensland</option>
+       <option value="1">New South Wales</option>
+       <option value="2">Australian Capital Territory</option>
+       <option value="3">Victoria</option>
+       <option value="4">Tasmania</option>
+       <option value="5">Northern Territory</option>
+       <option value="6">South Australia</option>
+       <option value="7">Western Australia</option>
+      </select>
+
+      <p class="submit">
+       <input type="submit" name="Submit" value="Send Postcard" />
+      </p>
+    </form>
+  ';
+
+  return $page;
+*/
+*/
 }
 
 // Authenticate and instantiate the Salsa connector
