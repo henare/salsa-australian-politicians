@@ -143,6 +143,14 @@ function salsa_campaigns_shortcode($atts) {
   // Route pages based on data POSTed
   if (isset($_POST['salsa_campaigns_method'])) {
     # Check the requested method here and route to the correct function
+    switch ($_POST['salsa_campaigns_method']) {
+      case 'selectMP':
+        return salsa_campaigns_select_mp_page($_POST['salsa_campaigns_postcode']);
+        break;
+      case 'someother':
+        #do stuff
+        break;
+    }
   } else {
     return salsa_campaigns_postcode_page();
   }
@@ -181,20 +189,79 @@ function salsa_campaigns_postcode_page() {
  * This page is rendered when the user has entered a postcode and we
  * want to display the message and detail entry form
 */
-function salsa_campaigns_message_page($postcode) {
+function salsa_campaigns_select_mp_page($postcode) {
   // Validate postcode
   if (!preg_match("/^\d{4}$/", $postcode)) {
-    return 'Sorry, that postcode was not valid, please try again' . salsa_campaigns_postcode_page();
+    return 'Sorry, that postcode was not valid, please try again.' . salsa_campaigns_postcode_page();
   }
 
   $salsa_campaigns_options = get_option('salsa_campaigns_options');
 
-  // Get data from the OpenAustralia API
+  // Get Representatives from the OpenAustralia API
   $representatives = simplexml_load_file('http://www.openaustralia.org/api/getRepresentatives?output=xml&key=' . $salsa_campaigns_options['oa_api_key'] . '&postcode=' . $postcode);
 
   // Check there wasn't a problem
-  if ( $representatives->error ) {
-    return "Sorry, I couldn't find any MPs, please try again" . salsa_campaigns_postcode_page();
+  if ($representatives->error) {
+    return "Sorry, I couldn't find any MPs, please try again." . salsa_campaigns_postcode_page();
   }
 
+  foreach ( $representatives->match as $representative ) {
+    $MPs[] = array(
+        'type'       => 'The member',
+        'name'       => $representative->full_name,
+        'electorate' => $representative->constituency
+    );
+  }
+
+  // Get Senators from the OpenAustralia API
+  $state = findState($postcode);
+  $senators = simplexml_load_file('http://www.openaustralia.org/api/getSenators?output=xml&key=' . $salsa_campaigns_options['oa_api_key'] . '&state=' . $state);
+
+  foreach ( $senators->match as $senator ) {
+    $MPs[] = array(
+        'type'       => 'Senator',
+        'name'       => $senator->name,
+        'electorate' => $senator->constituency
+    );
+  }
+
+  // Render page
+  $page = '
+    <script type="text/javascript">
+      # Allows links to POST data
+      function post(mp_name) {
+        var form = document.createElement("form");
+        form.setAttribute("method", "post");
+        form.setAttribute("action", location.href);
+
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "salsa_campaigns_mp");
+        hiddenField.setAttribute("value", mp_name);
+
+        form.appendChild(hiddenField);
+        document.body.appendChild(form);
+
+        form.submit();
+      }
+    </script>
+    Select which one of your representatives you want to write to:
+    <ul>
+  ';
+  foreach ( $MPs as $MP ) {
+    $page .= '<li><a href="#" onclick="post(' . $MP['name'] . ');">' . $MP['name'] . '</a> - ' . $MP['type'] . ' for ' . $MP['electorate'] . '</li>';
+  }
+  $page .= '</ul>';
+
+  return $page;
+}
+
+// Authenticate and instantiate the Salsa connector
+function salsa_campaigns_salsa_logon() {
+  $salsa_campaigns_options = get_option('salsa_campaigns_options');
+  return SAPSalsaConnector::initialize(
+    $salsa_campaigns_options['salsa_url'],
+    $salsa_campaigns_options['salsa_username'],
+    $salsa_campaigns_options['salsa_password']
+  );
 }
