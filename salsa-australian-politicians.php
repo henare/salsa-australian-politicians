@@ -307,7 +307,7 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
     return "Sorry, there seems to be a problem with that MP's contact details. Please contact the site owner or try selecting a different MP." . salsa_campaigns_postcode_page();
   }
 
-  # Get the default message, etc.
+  # First find the campaign key, then get the details. Two API calls, bleh.
   $current_action = $salsa->getObjects(
     'action',
     array(
@@ -315,29 +315,37 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
     ),
     array('limit' => '1')
   );
+  $current_action = SAPSalsaAction::get($current_action->action->item->action_KEY);
 
-/*
+  # We only get the first content item (i.e. we don't support multi-content targeted actions
+  $content = array_shift($current_action->getContents());
+
   $page = '
     Enter your message and details to send to ' . $mp_first_name . ' ' . $mp_last_name . ':</p>
     <form name="form1" method="post" action="">
       <input type="hidden" name="salsa_campaigns_method" value="send_message" />
+      <input type="hidden" name="salsa_campaigns_action_key" value="'  . $current_action->action_KEY .  '" />
 
       <p>Subject</p>
-      <input type="text" name="aycc_mymc_subject" value="" />
+      <input type="text" name="salsa_campaigns_subject" value="' . $content->Recommended_Subject . '" />
 
-      Message<br />
-      <textarea rows="5" cols="50" name="aycc_mymc_message">Please stop climate change.</textarea>
+      <p>Message</p>
+      <textarea rows="5" cols="50" name="salsa_campaigns_message">' . $content->Recommended_Content . '</textarea>
 
-      First name<br />
-      <input type="text" name="aycc_mymc_firstname" value="" /><br />
-      Last name<br />
-      <input type="text" name="aycc_mymc_lastname" value="" /><br />
-      Email address<br />
-      <input type="text" name="aycc_mymc_email" value="" /><br />
-      Post code<br />
-      <input type="text" name="aycc_mymc_sender_postcode" value="" /><br />
-      State<br />
-      <select name="aycc_mymc_state">
+      <p>First name</p>
+      <input type="text" name="salsa_campaigns_firstname" value="" />
+
+      <p>Last name</p>
+      <input type="text" name="salsa_campaigns_lastname" value="" />
+
+      <p>Email address</p>
+      <input type="text" name="salsa_campaigns_email" value="" />
+
+      <p>Post code</p>
+      <input type="text" name="salsa_campaigns_postcode" value="" />
+
+      <p>State</p>
+      <select name="salsa_campaigns_state">
        <option value="0">Queensland</option>
        <option value="1">New South Wales</option>
        <option value="2">Australian Capital Territory</option>
@@ -349,14 +357,12 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
       </select>
 
       <p class="submit">
-       <input type="submit" name="Submit" value="Send Postcard" />
+       <input type="submit" name="Submit" value="Send Message" />
       </p>
     </form>
   ';
 
   return $page;
-*/
-*/
 }
 
 // Authenticate and instantiate the Salsa connector
