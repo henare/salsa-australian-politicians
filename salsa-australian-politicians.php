@@ -163,12 +163,13 @@ function salsa_campaigns_error_page() {
 function salsa_campaigns_postcode_page() {
   return '
     <form name="form1" method="post" action="">
-      <input type="hidden" name="method" value="step2">
+      <input type="hidden" name="salsa_campaigns_method" value="selectMP">
       <p>
-        Enter your postcode to find your representative<br />
+        Enter your postcode to find your representative:
+      </p>
+      <p>
         <input type="text" name="salsa_campaigns_postcode" value="" size="4" />
       </p>
-
       <p class="submit">
         <input type="submit" name="Submit" class="button-primary" value="Find my representative" />
       </p>
