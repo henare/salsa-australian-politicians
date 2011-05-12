@@ -74,7 +74,7 @@ function salsa_campaigns_options() {
   <div class="wrap">
     <h2>Salsa Campaigns for Australian Politicians Settings</h2>
     <p>To use this plugin, put the shortcode <code>[salsa-campaign name="My campaign"]</code> on a page with the name of your Salsa Campaign.</p>
-    <form name="form1" method="post" action="">
+    <form method="post" action="">
       <input type="hidden" name="salsa_campaigns_hidden" value="Y" />
       <h3>Salsa Settings</h3>
       <p>
@@ -196,17 +196,10 @@ function salsa_campaigns_error_page() {
 */
 function salsa_campaigns_postcode_page() {
   return '
-    <form name="form1" method="post" action="">
+    <form id="salsa_campaigns_form" method="post" action="">
       <input type="hidden" name="salsa_campaigns_method" value="select_mp">
-      <p>
-        Enter your postcode to find your representative:
-      </p>
-      <p>
-        <input type="text" name="salsa_campaigns_postcode" value="" size="4" />
-      </p>
-      <p class="submit">
-        <input type="submit" name="Submit" class="button-primary" value="Find my representative" />
-      </p>
+        <p>Postcode: <input type="text" name="salsa_campaigns_postcode" value="" size="4" /></p>
+      <input type="submit" name="Submit" class="button" value="Find my MPs" />
     </form>
   ';
 }
@@ -294,7 +287,7 @@ function salsa_campaigns_select_mp_page($postcode) {
       }
     </script>
     Select which one of your representatives you want to write to:
-    <ul>
+    <ul id="salsa_campaigns_mp_list">
   ';
   foreach ( $MPs as $MP ) {
     $page .= '<li><a href="#" onclick="post(\''
@@ -364,7 +357,7 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
 
   $page = '
     Enter your message and details to send to ' . $mp_first_name . ' ' . $mp_last_name . ':</p>
-    <form name="form1" method="post" action="">
+    <form id="salsa_campaigns_form" method="post" action="">
       <input type="hidden" name="salsa_campaigns_method" value="send_message" />
       <input type="hidden" name="salsa_campaigns_action_key" value="'  . $current_action->action_KEY .  '" />
       <input type="hidden" name="salsa_campaigns_recipient_key" value="'  . $recipient->recipient_KEY .  '" />
@@ -384,11 +377,11 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
       <p>Email address</p>
       <input type="text" name="salsa_campaigns_email" value="" />
 
-      <p>Post code</p>
+      <p>Postcode</p>
       <input type="text" name="salsa_campaigns_postcode" value="" />
 
       <p class="submit">
-       <input type="submit" name="Submit" value="Send Message" />
+       <input type="submit" name="Submit" value="Send Message" class="button" />
       </p>
     </form>
   ';
