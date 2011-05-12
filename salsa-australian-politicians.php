@@ -159,7 +159,8 @@ function salsa_campaigns_shortcode($atts) {
         return salsa_campaigns_write_message_page(
           $name,
           $_POST['salsa_campaigns_mp_first_name'],
-          $_POST['salsa_campaigns_mp_last_name']
+          $_POST['salsa_campaigns_mp_last_name'],
+          $_POST['salsa_campaigns_mp_party']
         );
         break;
       case 'send_message':
@@ -232,10 +233,11 @@ function salsa_campaigns_select_mp_page($postcode) {
 
   foreach ( $representatives->match as $representative ) {
     $MPs[] = array(
-        'type'       => 'The member',
+        'type'       => 'Member',
         'first_name' => $representative->first_name,
         'last_name'  => $representative->last_name,
-        'electorate' => $representative->constituency
+        'electorate' => $representative->constituency,
+        'party'      => $representative->party
     );
   }
 
@@ -248,7 +250,8 @@ function salsa_campaigns_select_mp_page($postcode) {
         'type'       => 'Senator',
         'first_name' => $senator->first_name,
         'last_name'  => $senator->last_name,
-        'electorate' => $senator->constituency
+        'electorate' => $senator->constituency,
+        'party'      => $senator->party
     );
   }
 
@@ -256,7 +259,7 @@ function salsa_campaigns_select_mp_page($postcode) {
   $page = '
     <script type="text/javascript">
       // Allows links to POST data
-      function post(mp_first_name, mp_last_name) {
+      function post(mp_first_name, mp_last_name, mp_party) {
         var form = document.createElement("form");
         form.setAttribute("method", "post");
         form.setAttribute("action", location.href);
@@ -271,6 +274,11 @@ function salsa_campaigns_select_mp_page($postcode) {
         mpLastName.setAttribute("name", "salsa_campaigns_mp_last_name");
         mpLastName.setAttribute("value", mp_last_name);
 
+        var mpParty = document.createElement("input");
+        mpParty.setAttribute("type", "hidden");
+        mpParty.setAttribute("name", "salsa_campaigns_mp_party");
+        mpParty.setAttribute("value", mp_party);
+
         var methodField = document.createElement("input");
         methodField.setAttribute("type", "hidden");
         methodField.setAttribute("name", "salsa_campaigns_method");
@@ -278,6 +286,7 @@ function salsa_campaigns_select_mp_page($postcode) {
 
         form.appendChild(mpFirstName);
         form.appendChild(mpLastName);
+        form.appendChild(mpParty);
         form.appendChild(methodField);
         document.body.appendChild(form);
 
@@ -292,11 +301,15 @@ function salsa_campaigns_select_mp_page($postcode) {
            . $MP['first_name']
            . '\',\''
            . $MP['last_name']
+           . '\',\''
+           . $MP['party']
            . '\');">'
            . $MP['first_name']
            . ' '
            . $MP['last_name']
            . '</a> - '
+           . $MP['party']
+           . ' '
            . $MP['type']
            . ' for '
            . $MP['electorate']
@@ -311,7 +324,7 @@ function salsa_campaigns_select_mp_page($postcode) {
  * This page is rendered when the user has selected an MP and needs to
  * write their message and enter their details
 */
-function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_last_name) {
+function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_last_name, $mp_party) {
   # Check the MP is in Salsa as a target
   $salsa = salsa_campaigns_salsa_logon();
   $recipient = $salsa->getObjects(
@@ -338,8 +351,16 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
   );
   $current_action = SAPSalsaAction::get($current_action->action->item->action_KEY);
 
-  # We only get the first content item (i.e. we don't support multi-content targeted actions
-  $content = array_shift($current_action->getContents());
+  # Get the suggested content
+  $content_sets = $current_action->getContents();
+  # Defaults to the first returned
+  $conent = array_shift($content_sets);
+  # Check if there's custom content for this MP's party
+  foreach ($current_action->getContents() as $content_set) {
+    if ($content_set->Name == $mp_party) {
+      $content = $content_set;
+    }
+  }
 
   $page = '
     Enter your message and details to send to ' . $mp_first_name . ' ' . $mp_last_name . ':</p>

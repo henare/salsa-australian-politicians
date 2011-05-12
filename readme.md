@@ -27,6 +27,21 @@ this out and it will be ignored. The values of your custom field must
 match three letter state codes or the state will not be recorded (i.e.
 ACT, NSW, etc.).
 
+### Multi-content targeted actions
+
+If you want to run a campaign that has different suggested content based
+on the target's party you need to set up different content sets.
+
+The way the plugin works is that it searches for a content set called
+the name of the party of the target and if it can't find one, it just
+uses the first one listed.
+
+So, if you want custom content for Labor party MPs, set up a content set
+called "Australian Labor Party". Remember that if the plugin can't find
+a content set for the target's party, it will just use the first one it
+finds so it is a good idea to have a generic message as the first
+content set.
+
 Running a campaign
 ------------------
 
@@ -55,7 +70,6 @@ Constraints
 There's a few constraints when using this plugin:
 
 * No HTML email (Salsa Campaigns do not support this)
-* No multi content targeted actions
 * Campaigns must have unique names
 
 Changelog
