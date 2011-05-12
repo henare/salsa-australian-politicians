@@ -48,16 +48,18 @@ function salsa_campaigns_options() {
 
   // Process submitted options
   if (isset($_POST['salsa_campaigns_hidden']) && $_POST['salsa_campaigns_hidden'] == 'Y'){
-    $salsa_username = $_POST['salsa_username'];
-    $salsa_password = $_POST['salsa_password']; // Should probably encrypt this
-    $salsa_url      = $_POST['salsa_url'];
-    $oa_api_key     = $_POST['oa_api_key'];
+    $salsa_username    = $_POST['salsa_username'];
+    $salsa_password    = $_POST['salsa_password']; // Should probably encrypt this
+    $salsa_url         = $_POST['salsa_url'];
+    $oa_api_key        = $_POST['oa_api_key'];
+    $salsa_state_field = $_POST['salsa_state_field'];
 
     $salsa_campaigns_options = array(
-        'salsa_username' => $salsa_username,
-        'salsa_password' => $salsa_password,
-        'salsa_url'      => $salsa_url,
-        'oa_api_key'     => $oa_api_key
+        'salsa_username'    => $salsa_username,
+        'salsa_password'    => $salsa_password,
+        'salsa_url'         => $salsa_url,
+        'salsa_state_field' => $salsa_state_field,
+        'oa_api_key'        => $oa_api_key
     );
     update_option('salsa_campaigns_options', $salsa_campaigns_options);
 
@@ -77,21 +79,27 @@ function salsa_campaigns_options() {
       <h3>Salsa Settings</h3>
       <p>
         Salsa Username<br />
-        <input type="text" name="salsa_username" value="<?php echo $salsa_campaigns_options['salsa_username']; ?>" size="26" />
+        <input type="text" name="salsa_username" value="<?php if (isset($salsa_campaigns_options['salsa_username'])) { echo $salsa_campaigns_options['salsa_username']; } ?>" size="26" />
         <span class="description">Enter the Salsa username to access the API, this nornally your email address</span>
       </p>
 
       <p>
         Salsa Password<br />
-        <input type="text" name="salsa_password" value="<?php echo $salsa_campaigns_options['salsa_password']; ?>" size="26" />
+        <input type="text" name="salsa_password" value="<?php if (isset($salsa_campaigns_options['salsa_password'])) { echo $salsa_campaigns_options['salsa_password']; } ?>" size="26" />
         <span class="description">Enter your Salsa password that has access to the API</span><br /><br />
         <span class="description"><strong>IMPORTANT:</strong> This password is stored and displayed in the settings as plain text, be sure not to use a valuable password</span>
       </p>
 
       <p>
         Salsa URL<br />
-        <input type="text" name="salsa_url" value="<?php echo $salsa_campaigns_options['salsa_url']; ?>" size="26" />
+        <input type="text" name="salsa_url" value="<?php if(isset($salsa_campaigns_options['salsa_url'])) { echo $salsa_campaigns_options['salsa_url']; } ?>" size="26" />
         <span class="description">Enter the base URL of your Salsa instance. It should looks something like <code>http://salsa.wiredforchange.com/</code></span>
+      </p>
+
+      <p>
+        Salsa State Custom Field<br />
+        <input type="text" name="salsa_state_field" value="<?php if(isset($salsa_campaigns_options['salsa_state_field'])) { echo $salsa_campaigns_options['salsa_state_field']; } ?>" size="26" />
+        <span class="description">If you use a custom field for your supporters' Australian state, enter the name of the field here (e.g. aus_state)</span>
       </p>
 
       <h3>OpenAustralia Settings</h3>
@@ -163,8 +171,7 @@ function salsa_campaigns_shortcode($atts) {
           'firstname'     => $_POST['salsa_campaigns_firstname'],
           'lastname'      => $_POST['salsa_campaigns_lastname'],
           'email'         => $_POST['salsa_campaigns_email'],
-          'postcode'      => $_POST['salsa_campaigns_postcode'],
-          'state'         => $_POST['salsa_campaigns_state']
+          'postcode'      => $_POST['salsa_campaigns_postcode']
         );
         return salsa_campaigns_send_message_page($details);
         break;
@@ -359,18 +366,6 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
       <p>Post code</p>
       <input type="text" name="salsa_campaigns_postcode" value="" />
 
-      <p>State</p>
-      <select name="salsa_campaigns_state">
-       <option value="0">Queensland</option>
-       <option value="1">New South Wales</option>
-       <option value="2">Australian Capital Territory</option>
-       <option value="3">Victoria</option>
-       <option value="4">Tasmania</option>
-       <option value="5">Northern Territory</option>
-       <option value="6">South Australia</option>
-       <option value="7">Western Australia</option>
-      </select>
-
       <p class="submit">
        <input type="submit" name="Submit" value="Send Message" />
       </p>
@@ -383,7 +378,18 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
 function salsa_campaigns_send_message_page($details) {
   $salsa = salsa_campaigns_salsa_logon();
 
-  # Add details we've collected to submit to Salsa
+  // If the plugin is set to use a state custom field, save it with the supporter
+  $salsa_campaigns_options = get_option('salsa_campaigns_options');
+  if (isset($salsa_campaigns_options['salsa_state_field'])) {
+    // Workaround
+    $state = salsa_campaigns_find_state($details['postcode']);
+    if ($state == 'Queensland') {
+      $state = 'QLD';
+    }
+    $p[$salsa_campaigns_options['salsa_state_field']] = $state;
+  }
+
+  // Add details we've collected to submit to Salsa
   $p['action_KEY'] = $details['action_key'];
   $p['target_key'] = $details['recipient_key'];
   $p['Subject'] = $details['subject'];
@@ -391,11 +397,10 @@ function salsa_campaigns_send_message_page($details) {
   $p['First_Name'] = $details['firstname'];
   $p['Last_Name'] = $details['lastname'];
   $p['Email'] = $details['email'];
-  #$p[''] = $details['postcode'];
-  #$p[''] = $details['state'];
+  $p['Zip'] = $details['postcode'];
   $p['linkKey'] = $details['action_key'];
 
-  # Add mandatory fields we need to submit to Salsa
+  // Add mandatory fields we need to submit to Salsa
   $p['table'] = "supporter";
   $p['link'] = "action";
   $p['target_contentName'] = "Content";
@@ -403,6 +408,7 @@ function salsa_campaigns_send_message_page($details) {
   $p['target_method'] = "Email/Webform";
   $p['target_type'] = "recipient";
 
+  # Submit the action to Salsa
   $result = $salsa->submitForm("/salsa/api/action/processAction2.jsp", $p);
   if ($result) {
     return $result;

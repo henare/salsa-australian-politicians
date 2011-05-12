@@ -17,6 +17,16 @@ page of your Wordpress site.
 These settings include your Salsa access details and an [OpenAustralia]
 API key, which is used to get the details of current Federal MPs.
 
+There is also a setting to specify the custom field you use for your
+supporter's state. This is because many Australian Salsa customers are
+forced to create a custom field as Salsa does not support states outside
+of the US.
+
+If you don't want to record the state of people taking action just leave
+this out and it will be ignored. The values of your custom field must
+match three letter state codes or the state will not be recorded (i.e.
+ACT, NSW, etc.).
+
 Running a campaign
 ------------------
 
