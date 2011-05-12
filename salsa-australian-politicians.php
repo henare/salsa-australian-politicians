@@ -154,6 +154,20 @@ function salsa_campaigns_shortcode($atts) {
           $_POST['salsa_campaigns_mp_last_name']
         );
         break;
+      case 'send_message':
+        $details = array (
+          'action_key'    => $_POST['salsa_campaigns_action_key'],
+          'recipient_key' => $_POST['salsa_campaigns_recipient_key'],
+          'subject'       => $_POST['salsa_campaigns_subject'],
+          'message'       => $_POST['salsa_campaigns_message'],
+          'firstname'     => $_POST['salsa_campaigns_firstname'],
+          'lastname'      => $_POST['salsa_campaigns_lastname'],
+          'email'         => $_POST['salsa_campaigns_email'],
+          'postcode'      => $_POST['salsa_campaigns_postcode'],
+          'state'         => $_POST['salsa_campaigns_state']
+        );
+        return salsa_campaigns_send_message_page($details);
+        break;
     }
   } else {
     return salsa_campaigns_postcode_page();
@@ -325,6 +339,7 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
     <form name="form1" method="post" action="">
       <input type="hidden" name="salsa_campaigns_method" value="send_message" />
       <input type="hidden" name="salsa_campaigns_action_key" value="'  . $current_action->action_KEY .  '" />
+      <input type="hidden" name="salsa_campaigns_recipient_key" value="'  . $recipient->recipient_KEY .  '" />
 
       <p>Subject</p>
       <input type="text" name="salsa_campaigns_subject" value="' . $content->Recommended_Subject . '" />
@@ -363,6 +378,37 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
   ';
 
   return $page;
+}
+
+function salsa_campaigns_send_message_page($details) {
+  $salsa = salsa_campaigns_salsa_logon();
+
+  # Add details we've collected to submit to Salsa
+  $p['action_KEY'] = $details['action_key'];
+  $p['target_key'] = $details['recipient_key'];
+  $p['Subject'] = $details['subject'];
+  $p['Content'] = $details['message'];
+  $p['First_Name'] = $details['firstname'];
+  $p['Last_Name'] = $details['lastname'];
+  $p['Email'] = $details['email'];
+  #$p[''] = $details['postcode'];
+  #$p[''] = $details['state'];
+  $p['linkKey'] = $details['action_key'];
+
+  # Add mandatory fields we need to submit to Salsa
+  $p['table'] = "supporter";
+  $p['link'] = "action";
+  $p['target_contentName'] = "Content";
+  $p['target_subjectName'] = "Subject";
+  $p['target_method'] = "Email/Webform";
+  $p['target_type'] = "recipient";
+
+  $result = $salsa->submitForm("/salsa/api/action/processAction2.jsp", $p);
+  if ($result) {
+    return $result;
+  }else{
+    return "Sorry, your message was not sent. Please contact the site owner to report this problem.";
+  }
 }
 
 // Authenticate and instantiate the Salsa connector
