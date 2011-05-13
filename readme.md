@@ -55,6 +55,11 @@ content for the email so it must be unique. Once you've got the action
 ready you can insert the campaign into your Wordpress site using the
 shortcode `[salsa-campaign name="My campaign"]`.
 
+If you'd like to only target MPs from one of the houses of parliament
+(the House of Representatives or Senate) you can add the shortcode
+variable "house", for example `[salsa-campaign name="My campaign"
+house="representatives"]`.
+
 If you've configured your action correctly it should now allow users of
 your site to:
 

@@ -125,7 +125,8 @@ function salsa_campaigns_shortcode($atts) {
   # Get and check the shortcode attributes
   extract(shortcode_atts(
     array(
-      'name' => ''
+      'name' => '',
+      'house' => ''
     ),
     $atts
   ));
@@ -153,7 +154,7 @@ function salsa_campaigns_shortcode($atts) {
     # Check the requested method here and route to the correct function
     switch ($_POST['salsa_campaigns_method']) {
       case 'select_mp':
-        return salsa_campaigns_select_mp_page($_POST['salsa_campaigns_postcode']);
+        return salsa_campaigns_select_mp_page($_POST['salsa_campaigns_postcode'], $house);
         break;
       case 'write_message':
         return salsa_campaigns_write_message_page(
@@ -208,7 +209,7 @@ function salsa_campaigns_postcode_page() {
  * This page is rendered when the user has entered a postcode and they
  * need to select an MP to write to
 */
-function salsa_campaigns_select_mp_page($postcode) {
+function salsa_campaigns_select_mp_page($postcode, $house) {
   // Validate postcode
   if (!preg_match("/^\d{4}$/", $postcode)) {
     return 'Sorry, that postcode was not valid, please try again.' . salsa_campaigns_postcode_page();
@@ -216,36 +217,44 @@ function salsa_campaigns_select_mp_page($postcode) {
 
   $salsa_campaigns_options = get_option('salsa_campaigns_options');
 
-  // Get Representatives from the OpenAustralia API
-  $representatives = simplexml_load_file('http://www.openaustralia.org/api/getRepresentatives?output=xml&key=' . $salsa_campaigns_options['oa_api_key'] . '&postcode=' . $postcode);
+  if (!$house OR strtolower($house) == "representatives") {
+    // Get Representatives from the OpenAustralia API
+    $representatives = simplexml_load_file('http://www.openaustralia.org/api/getRepresentatives?output=xml&key=' . $salsa_campaigns_options['oa_api_key'] . '&postcode=' . $postcode);
 
-  // Check there wasn't a problem
-  if ($representatives->error) {
-    return "Sorry, I couldn't find any MPs, please try again." . salsa_campaigns_postcode_page();
+    // Check there wasn't a problem
+    if ($representatives->error) {
+      return "Sorry, I couldn't find any MPs, please try again." . salsa_campaigns_postcode_page();
+    }
+
+    foreach ( $representatives->match as $representative ) {
+      $MPs[] = array(
+          'type'       => 'Member',
+          'first_name' => $representative->first_name,
+          'last_name'  => $representative->last_name,
+          'electorate' => $representative->constituency,
+          'party'      => $representative->party
+      );
+    }
   }
 
-  foreach ( $representatives->match as $representative ) {
-    $MPs[] = array(
-        'type'       => 'Member',
-        'first_name' => $representative->first_name,
-        'last_name'  => $representative->last_name,
-        'electorate' => $representative->constituency,
-        'party'      => $representative->party
-    );
+  if (!$house OR strtolower($house) == "senate") {
+    // Get Senators from the OpenAustralia API
+    $state = salsa_campaigns_find_state($postcode);
+    $senators = simplexml_load_file('http://www.openaustralia.org/api/getSenators?output=xml&key=' . $salsa_campaigns_options['oa_api_key'] . '&state=' . $state);
+
+    foreach ( $senators->match as $senator ) {
+      $MPs[] = array(
+          'type'       => 'Senator',
+          'first_name' => $senator->first_name,
+          'last_name'  => $senator->last_name,
+          'electorate' => $senator->constituency,
+          'party'      => $senator->party
+      );
+    }
   }
 
-  // Get Senators from the OpenAustralia API
-  $state = salsa_campaigns_find_state($postcode);
-  $senators = simplexml_load_file('http://www.openaustralia.org/api/getSenators?output=xml&key=' . $salsa_campaigns_options['oa_api_key'] . '&state=' . $state);
-
-  foreach ( $senators->match as $senator ) {
-    $MPs[] = array(
-        'type'       => 'Senator',
-        'first_name' => $senator->first_name,
-        'last_name'  => $senator->last_name,
-        'electorate' => $senator->constituency,
-        'party'      => $senator->party
-    );
+  if (!isset($MPs)) {
+    return salsa_campaigns_error_page();
   }
 
   // Render page
