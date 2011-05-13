@@ -200,7 +200,7 @@ function salsa_campaigns_postcode_page() {
     <form id="salsa_campaigns_form" method="post" action="">
       <input type="hidden" name="salsa_campaigns_method" value="select_mp">
         <p>Postcode: <input type="text" name="salsa_campaigns_postcode" value="" size="4" /></p>
-      <input type="submit" name="Submit" class="button" value="Find my MPs" />
+      <input type="submit" name="Submit" class="button" value="Find my MP" />
     </form>
   ';
 }
@@ -295,7 +295,7 @@ function salsa_campaigns_select_mp_page($postcode, $house) {
         form.submit();
       }
     </script>
-    Select which one of your representatives you want to write to:
+    Choose your MP:
     <ul id="salsa_campaigns_mp_list">
   ';
   foreach ( $MPs as $MP ) {
