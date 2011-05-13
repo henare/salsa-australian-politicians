@@ -48,6 +48,9 @@ function salsa_campaigns_options() {
 
   // Process submitted options
   if (isset($_POST['salsa_campaigns_hidden']) && $_POST['salsa_campaigns_hidden'] == 'Y'){
+    // CSRF check
+    check_admin_referer();
+
     $salsa_username    = $_POST['salsa_username'];
     $salsa_password    = $_POST['salsa_password']; // Should probably encrypt this
     $salsa_url         = $_POST['salsa_url'];
@@ -76,6 +79,7 @@ function salsa_campaigns_options() {
     <p>To use this plugin, put the shortcode <code>[salsa-campaign name="My campaign"]</code> on a page with the name of your Salsa Campaign.</p>
     <form method="post" action="">
       <input type="hidden" name="salsa_campaigns_hidden" value="Y" />
+      <?php wp_nonce_field(); ?>
       <h3>Salsa Settings</h3>
       <p>
         Salsa Username<br />
