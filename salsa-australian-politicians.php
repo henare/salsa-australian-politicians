@@ -227,6 +227,11 @@ function salsa_campaigns_select_mp_page($postcode, $house) {
     }
 
     foreach ( $representatives->match as $representative ) {
+      # Work around incorrect party names from the OpenAustralia API
+      if ($representative->party == 'Speaker' OR $representative->party == 'Deputy-Speaker') {
+          $representative->party = 'Australian Labor Party';
+      }
+
       $MPs[] = array(
           'type'       => 'Member',
           'first_name' => $representative->first_name,
