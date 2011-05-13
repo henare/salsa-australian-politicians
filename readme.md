@@ -77,6 +77,15 @@ There's a few constraints when using this plugin:
 * No HTML email (Salsa Campaigns do not support this)
 * Campaigns must have unique names
 
+Credits
+-------
+
+* [Henare Degan](http://www.henaredegan.com/)
+* [Mikey Leung](http://www.mikeyleung.ca/)
+
+This plugin was built with support from the [Australian Youth Climate
+Coalition][aycc] and [The Oaktree Foundation][oaktree].
+
 Changelog
 ---------
 
@@ -85,3 +94,5 @@ Changelog
   [salsa]: http://www.salsalabs.com/
   [openaustralia]: http://www.openaustralia.org/
   [wp-jalapeno]: http://www.wpjalapeno.com/
+  [aycc]: http://aycc.org.au/
+  [oaktree]: http://theoaktree.org/
