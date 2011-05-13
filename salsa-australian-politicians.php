@@ -161,7 +161,8 @@ function salsa_campaigns_shortcode($atts) {
           $name,
           $_POST['salsa_campaigns_mp_first_name'],
           $_POST['salsa_campaigns_mp_last_name'],
-          $_POST['salsa_campaigns_mp_party']
+          $_POST['salsa_campaigns_mp_party'],
+          $_POST['salsa_campaigns_postcode']
         );
         break;
       case 'send_message':
@@ -286,6 +287,11 @@ function salsa_campaigns_select_mp_page($postcode, $house) {
         mpParty.setAttribute("name", "salsa_campaigns_mp_party");
         mpParty.setAttribute("value", mp_party);
 
+        var userPostcode = document.createElement("input");
+        userPostcode.setAttribute("type", "hidden");
+        userPostcode.setAttribute("name", "salsa_campaigns_postcode");
+        userPostcode.setAttribute("value", "' . $postcode . '");
+
         var methodField = document.createElement("input");
         methodField.setAttribute("type", "hidden");
         methodField.setAttribute("name", "salsa_campaigns_method");
@@ -294,6 +300,7 @@ function salsa_campaigns_select_mp_page($postcode, $house) {
         form.appendChild(mpFirstName);
         form.appendChild(mpLastName);
         form.appendChild(mpParty);
+        form.appendChild(userPostcode);
         form.appendChild(methodField);
         document.body.appendChild(form);
 
@@ -331,7 +338,7 @@ function salsa_campaigns_select_mp_page($postcode, $house) {
  * This page is rendered when the user has selected an MP and needs to
  * write their message and enter their details
 */
-function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_last_name, $mp_party) {
+function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_last_name, $mp_party, $postcode) {
   # Check the MP is in Salsa as a target
   $salsa = salsa_campaigns_salsa_logon();
   $recipient = $salsa->getObjects(
@@ -375,6 +382,7 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
       <input type="hidden" name="salsa_campaigns_method" value="send_message" />
       <input type="hidden" name="salsa_campaigns_action_key" value="'  . $current_action->action_KEY .  '" />
       <input type="hidden" name="salsa_campaigns_recipient_key" value="'  . $recipient->recipient_KEY .  '" />
+      <input type="hidden" name="salsa_campaigns_postcode" value="' . $postcode . '" />
 
       <p>Subject</p>
       <input type="text" name="salsa_campaigns_subject" value="' . $content->Recommended_Subject . '" />
@@ -390,9 +398,6 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
 
       <p>Email address</p>
       <input type="text" name="salsa_campaigns_email" value="" />
-
-      <p>Postcode</p>
-      <input type="text" name="salsa_campaigns_postcode" value="" />
 
       <p class="submit">
        <input type="submit" name="Submit" value="Send Message" class="button" />
