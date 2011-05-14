@@ -178,7 +178,8 @@ function salsa_campaigns_shortcode($atts) {
           'firstname'     => $_POST['salsa_campaigns_firstname'],
           'lastname'      => $_POST['salsa_campaigns_lastname'],
           'email'         => $_POST['salsa_campaigns_email'],
-          'postcode'      => $_POST['salsa_campaigns_postcode']
+          'postcode'      => $_POST['salsa_campaigns_postcode'],
+          'city'          => $_POST['salsa_campaigns_city']
         );
         return salsa_campaigns_send_message_page($details);
         break;
@@ -403,6 +404,9 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
       <p>Email address</p>
       <input type="text" name="salsa_campaigns_email" value="" />
 
+      <p>City</p>
+      <input type="text" name="salsa_campaigns_city" value="" />
+
       <p class="submit">
        <input type="submit" name="Submit" value="Send Message" class="button" />
       </p>
@@ -435,6 +439,7 @@ function salsa_campaigns_send_message_page($details) {
   $p['Last_Name'] = $details['lastname'];
   $p['Email'] = $details['email'];
   $p['Zip'] = $details['postcode'];
+  $p['City'] = $details['city'];
   $p['linkKey'] = $details['action_key'];
 
   // Add mandatory fields we need to submit to Salsa
