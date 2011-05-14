@@ -171,15 +171,16 @@ function salsa_campaigns_shortcode($atts) {
         break;
       case 'send_message':
         $details = array (
-          'action_key'    => $_POST['salsa_campaigns_action_key'],
-          'recipient_key' => $_POST['salsa_campaigns_recipient_key'],
-          'subject'       => $_POST['salsa_campaigns_subject'],
-          'message'       => $_POST['salsa_campaigns_message'],
-          'firstname'     => $_POST['salsa_campaigns_firstname'],
-          'lastname'      => $_POST['salsa_campaigns_lastname'],
-          'email'         => $_POST['salsa_campaigns_email'],
-          'postcode'      => $_POST['salsa_campaigns_postcode'],
-          'city'          => $_POST['salsa_campaigns_city']
+          'action_key'         => $_POST['salsa_campaigns_action_key'],
+          'recipient_key'      => $_POST['salsa_campaigns_recipient_key'],
+          'email_trigger_keys' => $_POST['salsa_campaigns_email_trigger_keys'],
+          'subject'            => $_POST['salsa_campaigns_subject'],
+          'message'            => $_POST['salsa_campaigns_message'],
+          'firstname'          => $_POST['salsa_campaigns_firstname'],
+          'lastname'           => $_POST['salsa_campaigns_lastname'],
+          'email'              => $_POST['salsa_campaigns_email'],
+          'postcode'           => $_POST['salsa_campaigns_postcode'],
+          'city'               => $_POST['salsa_campaigns_city']
         );
         return salsa_campaigns_send_message_page($details);
         break;
@@ -388,6 +389,7 @@ function salsa_campaigns_write_message_page($campaign_name, $mp_first_name, $mp_
       <input type="hidden" name="salsa_campaigns_action_key" value="'  . $current_action->action_KEY .  '" />
       <input type="hidden" name="salsa_campaigns_recipient_key" value="'  . $recipient->recipient_KEY .  '" />
       <input type="hidden" name="salsa_campaigns_postcode" value="' . $postcode . '" />
+      <input type="hidden" name="salsa_campaigns_email_trigger_keys" value="' . $current_action->email_trigger_KEYS . '" />
 
       <p>Subject</p>
       <input type="text" name="salsa_campaigns_subject" value="' . $content->Recommended_Subject . '" />
@@ -441,6 +443,7 @@ function salsa_campaigns_send_message_page($details) {
   $p['Zip'] = $details['postcode'];
   $p['City'] = $details['city'];
   $p['linkKey'] = $details['action_key'];
+  $p['email_trigger_KEYS'] = $details['email_trigger_keys'];
 
   // Add mandatory fields we need to submit to Salsa
   $p['table'] = "supporter";
